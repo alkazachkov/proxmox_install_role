@@ -1,0 +1,22 @@
+#
+# If you want to manage parts of the network configuration manually,
+# please utilize the 'source' or 'source-directory' directives to do
+# so.
+# PVE will preserve these directives, but will NOT read its network
+# configuration from sourced files, so do not attempt to move any of
+# the PVE managed interfaces into external files!
+
+source /etc/network/interfaces.d/*
+
+auto lo
+iface lo inet loopback
+
+iface {{ ansible_default_ipv4.interface }} inet dhcp
+
+auto vmbr0
+iface vmbr0 inet static
+	address {{ ansible_default_ipv4.address }}/24
+	gateway {{ ansible_default_ipv4.gateway }}
+	bridge-ports {{ ansible_default_ipv4.interface }}
+	bridge-stp off
+	bridge-fd 0

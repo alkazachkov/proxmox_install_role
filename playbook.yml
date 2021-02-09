@@ -1,0 +1,61 @@
+---
+- name: Install ProxmoxVE-6.0
+  hosts: prx
+  tasks:
+    - name : Add /etc/hosts
+      copy:
+        src: ./hosts
+        dest: /etc/hosts
+        mode: 0644
+    - name: Download proxmox-ve-release-6.x.gpg
+      get_url:
+        url:  http://download.proxmox.com/debian/proxmox-ve-release-6.x.gpg
+        dest: /etc/apt/trusted.gpg.d/proxmox-ve-release-6.x.gpg
+        mode: '0444'
+    - name: Add the Proxmox VE repository
+      apt_repository:
+        repo: deb http://download.proxmox.com/debian/pve buster pve-no-subscription
+        state: present
+    - name: Remove specified repository from sources list
+      apt_repository:
+        repo: deb https://enterprise.proxmox.com/debian/pve buster pve-enterprise
+        state: absent
+    - name: Update repositories cache and full-upgrade
+      apt:
+        update_cache: 'yes'
+        upgrade: 'full'
+    - name: Install ProxmoxVE
+      apt:
+        name: "{{ item }}"
+        state: present
+      loop:
+        - proxmox-ve
+        - postfix
+        - open-iscsi
+        - ifupdown2
+    - name: Remove the os-prober package
+      apt:
+        name: "{{item}}"
+        state: absent
+      loop:
+        - os-prober
+        - linux-image-amd64
+        - 'linux-image-4.19*'
+    - name: Change Port from 8006 to 443
+      iptables:
+        table: nat
+        chain: PREROUTING
+        # in_interface: vmbr0
+        protocol: tcp
+        match: tcp
+        destination_port: "443"
+        jump: REDIRECT
+        to_ports: "8006"
+        comment: Redirect web traffic to port 8006
+    - name: Copy interfaces file
+      template:
+        src: ./interfaces.j2
+        dest: /etc/network/interfaces.new
+      when: ansible_default_ipv4.interface != "vmbr0"
+    # - name:
+    #   reboot:
