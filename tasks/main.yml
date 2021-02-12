@@ -1,2 +1,4 @@
 ---
 # tasks file for .
+- include: install_pve.yml
+- include: config_pve.yml

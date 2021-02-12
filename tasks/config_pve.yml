@@ -1,0 +1,8 @@
+---
+- name: Copy interfaces file
+  template:
+    src: ./interfaces.j2
+    dest: /etc/network/interfaces.new
+  when: ansible_default_ipv4.interface != "vmbr0"
+  notify:
+      - Reboot 

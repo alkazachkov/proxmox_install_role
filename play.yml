@@ -1,0 +1,5 @@
+---
+- hosts: prx
+  roles:
+    - proxmox_install_role
+    - geerlingguy.ntp
